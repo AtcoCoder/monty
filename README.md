@@ -2,7 +2,7 @@ Stacks, Queues - LIFO, FIFO
 
 The aim of this project is for the student to understand:
 
-Markup : **** What do LIFO and FIFO mean
+Markup : *** What do LIFO and FIFO mean
          * What is a stack, and when to use it
          * What is a queue, and when to use it
          * What are the common implementations of stacks and queues
