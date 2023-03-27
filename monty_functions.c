@@ -1,112 +1,135 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "monty.h"
-
 /**
- * get_function - selects the function to be executed
+ * read_file - reads a bytecode file and runs commands
+ * @filename: pathname to file
+ * @stack: pointer to the top of the stack
  *
- * @instruct: the opcode instruct
- *
- * Return: pointer to the selected function.
  */
-function_pointer get_function(const char *instruct)
+void read_file(char *filename, stack_t **stack)
 {
-	instruction_t func_pointers[] = {
-		{"push", push},
-		{"pall", pall},
-		{NULL, NULL}
+	char *buffer = NULL;
+	char *line;
+	size_t i = 0;
+	int line_count = 1;
+	instruct_func s;
+	int check;
+	int read;
+	FILE *file = fopen(filename, "r");
+
+	if (file == NULL)
+	{
+		printf("Error: Can't open file %s\n", filename);
+		error_exit(stack);
+	}
+	while ((read = getline(&buffer, &i, file)) != -1)
+	{
+		line = parse_line(buffer);
+		if (line == NULL || line[0] == '#')
+		{
+			line_count++;
+			continue;
+		}
+		s = get_op_func(line);
+		if (s == NULL)
+		{
+			printf("L%d: unknown instruction %s\n", line_count, line);
+			error_exit(stack);
+		}
+		s(stack, line_count);
+		line_count++;
+	}
+	free(buffer);
+	check = fclose(file);
+	if (check == -1)
+		exit(-1);
+}
+/**
+ * get_op_func -  checks opcode and returns the correct function
+ * @str: the opcode
+ *
+ * Return: returns a function, or NULL on failure
+ */
+instruct_func get_op_func(char *str)
+{
+	int i;
+
+	instruction_t instruct[] = {
+		{"push", _push},
+		{"pall", _pall},
+		{"pint", _pint},
+		{"pop", _pop},
+		{"swap", _swap},
+		{"add", _add},
+		{"nop", _nop},
+		{NULL, NULL},
 	};
 
-	int i = 0;
-
-	while (func_pointers[i].f != NULL &&
-			(strcmp(func_pointers[i].opcode, instruct) != 0))
+	i = 0;
+	while (instruct[i].f != NULL && strcmp(instruct[i].opcode, str) != 0)
 	{
 		i++;
 	}
-	return (func_pointers[i].f);
+
+	return (instruct[i].f);
+}
+
+#include "monty.h"
+
+/**
+ * parse_line - parses a line for an opcode and arguments
+ * @line: the line to be parsed
+ *
+ * Return: returns the opcode or null on failure
+ */
+char *parse_line(char *line)
+{
+	char *op_code;
+
+	op_code = strtok(line, "\n ");
+	if (op_code == NULL)
+		return (NULL);
+	return (op_code);
+}
+
+#include "monty.h"
+/**
+ * error_exit - frees the stack and exits due to erro
+ * @stack: pointer to the head of the stack
+ *
+ */
+void error_exit(stack_t **stack)
+{
+	if (*stack)
+		free_dlistint(*stack);
+	exit(EXIT_FAILURE);
 }
 
 /**
- * get_line - reads monty bytecode file line by line
- * @file_path: path of the monty bytecode file
- * Return: Nothing.
+ * isnumber - checks if a string is a number
+ * @str: string being passed
+ *
+ * Return: returns 1 if string is a number, 0 otherwise
  */
-void get_line(const char *file_path)
+int isnumber(char *str)
 {
-	FILE *fp;
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t read;
-	unsigned int line_num = 1;
-	char *instruct;
-	char instruct_copy[256];
-	function_pointer func;
-	stack_t *stack;
+	unsigned int i;
 
-	fp = fopen(file_path, "r");
-	if (fp == NULL)
+	if (str == NULL)
+		return (0);
+	i = 0;
+	while (str[i])
 	{
-		fprintf(stderr, "Error: Can't open file %s\n", file_path);
-		exit(EXIT_FAILURE);
-	}
-	while ((read = getline(&line, &len, fp)) != -1)
-	{
-		instruct = tokenize(line, instruct_copy);
-		if (instruct == NULL || instruct[0] == '#')
+		if (str[0] == '-')
 		{
-			line_num += 1;
+			i++;
 			continue;
 		}
-		func = get_function(instruct_copy);
-		if (func == NULL)
-		{
-			fprintf(stderr, "L%d: unknown instruction %s\n", line_num, instruct_copy);
-			exit(EXIT_FAILURE);
-		}
-		func(&stack, line_num);
-		line_num += 1;
+		if (!isdigit(str[i]))
+			return (0);
+		i++;
 	}
-	fclose(fp);
-	if (line)
-	{
-		free(line);
-		exit(-1);
-	}
-}
-
-/**
- * only_numword - removes all spaces and newline from str
- * @str: string
- * Return: Nothing.
- */
-void only_numword(char *str)
-{
-	int i;
-	int count = 0;
-
-	for (i = 0; str[i]; i++)
-		if ((str[i] != ' ') && (str[i] != '\n'))
-			str[count++] = str[i];
-	str[count] = '\0';
-}
-
-/**
- * tokenize - parse the line
- * @line: the line
- * @instruct_copy: container for filtered token
- * Return: the instruct or NULL if non exist.
- */
-char *tokenize(char *line, char instruct_copy[])
-{
-	char *instruct;
-
-	instruct = strtok(line, " ");
-	if (instruct == NULL)
-		return (NULL);
-	strcpy(instruct_copy, instruct);
-	only_numword(instruct_copy);
-	return (instruct);
+	return (1);
 }

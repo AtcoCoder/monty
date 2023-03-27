@@ -1,25 +1,22 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "monty.h"
-
+int sq_flag = 0;
 /**
- * main - check the code
- * @argc: argument count
- * @argv: list of arguments
- * Return: Always 0.
+ * main - driver function for monty program
+ * @ac: int num of arguments
+ * @av: opcode file
+ * Return: 0
  */
-int main(int argc, char *argv[])
+int main(int ac, char **av)
 {
-	char *file_path;
+	stack_t *stack;
 
-	if (argc != 2)
+	stack = NULL;
+	if (ac != 2)
 	{
-		fprintf(stderr, "USAGE: monty file\n");
-		exit(EXIT_FAILURE);
+		printf("USAGE: monty file\n");
+		error_exit(&stack);
 	}
-
-	file_path = argv[1];
-	get_line(file_path);
+	read_file(av[1], &stack);
+	free_dlistint(stack);
 	return (0);
 }
