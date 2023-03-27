@@ -1,6 +1,4 @@
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
 #include "monty.h"
 /**
  * read_file - reads a bytecode file and runs commands
@@ -62,8 +60,18 @@ instruct_func get_op_func(char *str)
 		{"pint", _pint},
 		{"pop", _pop},
 		{"swap", _swap},
+		{"pchar", _pchar},
 		{"add", _add},
+		{"sub", _sub},
+		{"mul", _mul},
+		{"div", _div},
+		{"mod", _mod},
 		{"nop", _nop},
+		{"rotl", _rotl},
+		{"rotr", _rotr},
+		{"pstr", _pstr},
+		{"stack", _stack},
+		{"queue", _queue},
 		{NULL, NULL},
 	};
 
@@ -92,44 +100,4 @@ char *parse_line(char *line)
 	if (op_code == NULL)
 		return (NULL);
 	return (op_code);
-}
-
-#include "monty.h"
-/**
- * error_exit - frees the stack and exits due to erro
- * @stack: pointer to the head of the stack
- *
- */
-void error_exit(stack_t **stack)
-{
-	if (*stack)
-		free_dlistint(*stack);
-	exit(EXIT_FAILURE);
-}
-
-/**
- * isnumber - checks if a string is a number
- * @str: string being passed
- *
- * Return: returns 1 if string is a number, 0 otherwise
- */
-int isnumber(char *str)
-{
-	unsigned int i;
-
-	if (str == NULL)
-		return (0);
-	i = 0;
-	while (str[i])
-	{
-		if (str[0] == '-')
-		{
-			i++;
-			continue;
-		}
-		if (!isdigit(str[i]))
-			return (0);
-		i++;
-	}
-	return (1);
 }
